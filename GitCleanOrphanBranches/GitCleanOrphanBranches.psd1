@@ -9,10 +9,10 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-# RootModule = ''
+RootModule = 'GitCleanOrphanBranches.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1.1'
+ModuleVersion = '1.2.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -33,7 +33,7 @@ Copyright = '(c) Prateek Mahendrakar. All rights reserved.'
 Description = 'Deletes orphan branches deleted from remote but present in local'
 
 # Minimum version of the PowerShell engine required by this module
-# PowerShellVersion = ''
+PowerShellVersion = '2.0'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -69,7 +69,7 @@ Description = 'Deletes orphan branches deleted from remote but present in local'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Remove-GitOrphanBranches'
+FunctionsToExport = @('Remove-GitOrphanBranches')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -78,16 +78,16 @@ CmdletsToExport = @()
 VariablesToExport = '*'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = 'rgob'
+AliasesToExport = @('rgob')
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
 
 # List of all modules packaged with this module
-# ModuleList = @()
+ModuleList = @('GitCleanOrphanBranches')
 
 # List of all files packaged with this module
-# FileList = @()
+# FileList = 'GitCleanOrphanBranches.psm1'
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
@@ -95,10 +95,10 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'Git','Cleanup'
+        Tags = @('Git','Cleanup-Orphans','Clean-up','Delete-Orphan-Branches')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/pmahend1/PowershellScripts/blob/main/LICENSE'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/pmahend1/PowershellScripts'
@@ -107,7 +107,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
 
         # Prerelease string of this module
         # Prerelease = ''
@@ -123,7 +123,7 @@ PrivateData = @{
  } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-# HelpInfoURI = ''
+HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''
