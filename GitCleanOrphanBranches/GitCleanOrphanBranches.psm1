@@ -1,45 +1,7 @@
-
-<#PSScriptInfo
-
-.VERSION 1.0.1
-
-.GUID a9667520-61fa-4e5f-bf05-3666ea11665a
-
-.AUTHOR Prateek Mahendrakar
-
-.COMPANYNAME
-
-.COPYRIGHT
-
-.TAGS
-
-.LICENSEURI
-
-.PROJECTURI https://github.com/pmahend1/PowershellScripts
-
-.ICONURI
-
-.EXTERNALMODULEDEPENDENCIES 
-
-.REQUIREDSCRIPTS
-
-.EXTERNALSCRIPTDEPENDENCIES
-
-.RELEASENOTES
-
-
-.PRIVATEDATA
-
+<#
+        .SYNOPSIS
+        Deletes orphan branches deleted from remote but present in local
 #>
-
-<# 
-
-.DESCRIPTION 
- Script to clean orphan branches which are deleted in remote but present in local 
-
-#> 
-Param()
-
 
 Function GitCleanOrphanBranches {
     # get branches to delete
