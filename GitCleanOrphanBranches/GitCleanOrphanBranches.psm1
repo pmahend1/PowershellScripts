@@ -3,7 +3,7 @@
         Deletes orphan branches deleted from remote but present in local
 #>
 
-Function GitCleanOrphanBranches {
+function Remove-GitOrphanBranches {
     # get branches to delete
     git fetch --prune
     $BranchesToDelete = git branch -vv | Select-String -Pattern ': gone]' | Select-String -Pattern '\*' -NotMatch 
@@ -46,4 +46,4 @@ Function GitCleanOrphanBranches {
         }        
     }
 }
-New-Alias -Name gcob -Value GitCleanOrphanBranches -Force
+New-Alias -Name rgob -Value Remove-GitOrphanBranches -Force

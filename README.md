@@ -4,5 +4,5 @@ Collection of useful powershell scripts and modules published to [PowerShell Gal
 
 ## 1. [GitCleanOrphanBranches](https://www.powershellgallery.com/packages/GitCleanOrphanBranches/)  
    Installation: `Install-Module -Name GitCleanOrphanBranches`  
-   Aliases:  `gcob`  
-   Usage: Go to a git directory and run `GitCleanOrphanBranches`
+   Aliases:  `rgob`  
+   Usage: Go to a git directory and run `Remove-GitOrphanBranches` and select `Y` when prompted.
