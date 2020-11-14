@@ -34,6 +34,6 @@ Deletes bin, obj folders recursively.
 ### Usage
 
 - Run `Remove-BinObjFolders`
-- To exclude few folders pass `Exclude` parameter with comma separated strings.
+- To exclude few folders pass `Exclude` parameter with comma separated strings.  
   `Remove-BinObjFolders -Exclude folder1,folder2,folderN`
 - Pass `Y` when prompted
