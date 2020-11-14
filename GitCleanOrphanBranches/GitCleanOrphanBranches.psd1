@@ -12,7 +12,7 @@
 RootModule = 'GitCleanOrphanBranches.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.2.0'
+ModuleVersion = '1.2.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -84,7 +84,7 @@ AliasesToExport = @('rgob')
 # DscResourcesToExport = @()
 
 # List of all modules packaged with this module
-ModuleList = @('GitCleanOrphanBranches')
+# ModuleList = @('GitCleanOrphanBranches')
 
 # List of all files packaged with this module
 # FileList = 'GitCleanOrphanBranches.psm1'

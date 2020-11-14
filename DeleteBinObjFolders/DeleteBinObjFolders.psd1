@@ -75,7 +75,7 @@ FunctionsToExport = @('Remove-BinObjFolders')
 CmdletsToExport = @()
 
 # Variables to export from this module
-VariablesToExport = @()
+VariablesToExport = '*'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 AliasesToExport = @('rbof')
@@ -84,7 +84,7 @@ AliasesToExport = @('rbof')
 # DscResourcesToExport = @()
 
 # List of all modules packaged with this module
-ModuleList = @('DeleteBinObjFolders')
+# ModuleList = @('DeleteBinObjFolders')
 
 # List of all files packaged with this module
 # FileList = @()
@@ -129,4 +129,3 @@ HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
 # DefaultCommandPrefix = ''
 
 }
-
