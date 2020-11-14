@@ -1,60 +1,72 @@
 <#
  .Synopsis
-  DeleteBinObjFolders function
+  function Remove-BinObjFolders 
 
  .Description
-  Deletes bin , obj folders
+  Deletes bin, obj folders recursively
 
  .Parameter Exclude
   List of folders to exclude.
 
  .Example
-   # Default
-  DeleteBinObjFolders
+  Remove-BinObjFolders
 
  .Example
-   # With Exclude
-   DeleteBinObjFolders -Exclude node_modules, temp
+  Remove-BinObjFolders -Exclude node_modules, temp
+  
+  If you want to exclude folders node_modules and temp from being deleted:
+
 #>
-function DeleteBinObjFolders {
+function Remove-BinObjFolders 
+{
     [CmdletBinding()]
-    param (
-        [System.Array] $exclude
+    param 
+    (
+        [System.Array] $Exclude
     )
-    if ($exclude.Length -eq 0) {
+    if ($Exclude.Length -eq 0) 
+    {
         $binObjFolders = Get-ChildItem -Include bin, obj -Recurse -Force
     }
-    else {
-        $exclusions = $exclude | Join-String -Separator ','  
+    else 
+    {
+        $exclusions = $Exclude | Join-String -Separator ',' 
         $binObjFolders = Get-ChildItem -Include bin, obj -Exclude $exclusions -Recurse -Force
     }
     
-    if ($binObjFolders -eq 0) {
+    if ($binObjFolders.Count -eq 0) 
+    {
         Write-Warning 'No bin, obj folders found!'
     }
-    else {
-        Write-Warning " - y/n"
-
+    else 
+    {
         $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Will delete all bin, obj folders."
         $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Does NOT delete any bin, obj folders."
         $options = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)
     
         $title = "Delete bin, obj folders" 
-        $message = "$($BranchesToDelete.Length) local orphan branches to delete. Do you want to continue?"
+        $message = "$($binObjFolders.Length) folders will be deleted. Do you want to continue?"
         $result = $host.ui.PromptForChoice($title, $message, $options, 1)
     
-        if ($result -eq 0) {
-            foreach ($item in $binObjFolders) {
-                try {
+        if ($result -eq 0) 
+        {
+            foreach ($item in $binObjFolders)
+            {
+                try 
+                {
+                    Write-Host "Deleting " $item
                     Remove-Item $item -Recurse -Force
                 }
-                catch  [System.Exception] {
-                    Write-Error $_ 
+                catch  [System.Exception] 
+                {
+                    Write-Error $_
                 }
             }
         }
-        else {
+        else 
+        {
             Write-Warning "Selected No. Aborting..."
         }   
     }
 }
+New-Alias -Name rbof -Value Remove-BinObjFolders -Force
