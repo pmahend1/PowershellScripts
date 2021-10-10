@@ -50,19 +50,12 @@ function Remove-BinObjFolders {
         $result = $host.ui.PromptForChoice($title, $message, $options, 1)
         
         if ($result -eq 0) {
-
-            $sortedJob = Start-Job -ScriptBlock { $unsortedList | Select-Object FullName, @{Name = "FolderDepth"; Expression = { $_.DirectoryName.Split('\').Count } } | Sort-Object -Descending FolderDepth, FullName }
-
-            while ($sortedJob.State -eq [System.Management.Automation.JobState]::Running) {
-                Write-Progress -Activity "Remove-BinObjFolder" -status "Sorting folders..." 
-            }
-            
-            $sortedFolders = $sortedJob |  Wait-Job | Receive-Job
+            $sortedFolders = $unsortedList | Select-Object FullName, @{Name = "FolderDepth"; Expression = { $_.FullName.Split('\').Count } } | Sort-Object -Property @{ Expression = 'FolderDepth'; Descending = $true }, @{ Expression = { $($_.FullName).Length } ; Descending = $true }
             
             foreach ($item in $sortedFolders) {
                 try {
-                    Write-Host "Deleting " $item
-                    Remove-Item $item -Recurse -Force
+                    Write-Host "Deleting " $item.FullName
+                    Remove-Item -Path $item.FullName -Recurse -Force
                 }
                 catch  [System.Exception] {
                     Write-Error $_
@@ -74,4 +67,5 @@ function Remove-BinObjFolders {
         }   
     }
 }
+
 New-Alias -Name rbof -Value Remove-BinObjFolders -Force
