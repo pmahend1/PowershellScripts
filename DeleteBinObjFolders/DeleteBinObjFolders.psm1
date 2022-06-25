@@ -32,7 +32,7 @@ function Remove-BinObjFolders {
     $folderFindJob = Start-Job -ScriptBlock { Get-ChildItem -Include bin, obj -Exclude $exclusionString -Recurse -Force }
 
     while ($folderFindJob.State -eq [System.Management.Automation.JobState]::Running) {
-        Write-Progress -Activity 'Remove-BinObjFolder' -Status "Searching for folder..."
+        Write-Progress -Activity 'Remove-BinObjFolder' -Status "Searching for folders..."
     }
 
     $unsortedList = $folderFindJob | Wait-Job | Receive-Job
@@ -54,8 +54,11 @@ function Remove-BinObjFolders {
             
             foreach ($item in $sortedFolders) {
                 try {
-                    Write-Host "Deleting " $item.FullName
+                    Write-Progress "Deleting " $item.FullName
                     Remove-Item -Path $item.FullName -Recurse -Force
+                    if ($? -eq $true) {
+                        Write-Host "Deleted " $item.FullName
+                    }
                 }
                 catch  [System.Exception] {
                     Write-Error $_
