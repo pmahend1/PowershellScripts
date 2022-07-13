@@ -107,7 +107,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
+        ReleaseNotes = 'https://github.com/pmahend1/PowershellScripts/blob/main/README.md'
 
         # Prerelease string of this module
         # Prerelease = ''
@@ -123,7 +123,7 @@ PrivateData = @{
 } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
+HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/blob/main/README.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''
