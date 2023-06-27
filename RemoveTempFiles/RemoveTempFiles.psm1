@@ -12,13 +12,16 @@
   Remove-TempFiles
 #>
 function Remove-TempFiles {
-    $envTempFiles = Get-ChildItem $env:TEMP -Recurse -Force
+
+    # Environment temp files deletion
+    $envTempFilesUnsorted = Get-ChildItem $env:TEMP -Recurse -Force
+    $envTempFiles = $envTempFilesUnsorted | Select-Object FullName, @{Name = "FolderDepth"; Expression = { $_.FullName.Split('\').Count } } | Sort-Object -Property @{ Expression = 'FolderDepth'; Descending = $true }, @{ Expression = { $($_.FullName).Length } ; Descending = $true }
     foreach ($tempFile in $envTempFiles) {
         try {
-            Write-Progress "Deleting " $item.FullName
-            Remove-Item -Path $item.FullName -Recurse -Force
+            Write-Progress "Deleting " $tempFile.FullName
+            Remove-Item -Path $tempFile.FullName -Recurse -Force
             if ($? -eq $true) {
-                Write-Host "Deleted " $item.FullName
+                Write-Host "Deleted " $tempFile.FullName -ForegroundColor Green
             }
         }
         catch  [System.Exception] {
@@ -26,13 +29,15 @@ function Remove-TempFiles {
         }
     }
 
-    $windowsTempFiles = Get-ChildItem $env:windir/Temp -Recurse -Force
+    # Windows temp files deletion
+    $windowsTempFilesUnsorted = Get-ChildItem $env:windir/Temp -Recurse -Force
+    $windowsTempFiles = $windowsTempFilesUnsorted | Select-Object FullName, @{Name = "FolderDepth"; Expression = { $_.FullName.Split('\').Count } } | Sort-Object -Property @{ Expression = 'FolderDepth'; Descending = $true }, @{ Expression = { $($_.FullName).Length } ; Descending = $true }
     foreach ($tempFile in $windowsTempFiles) {
         try {
-            Write-Progress "Deleting " $item.FullName
-            Remove-Item -Path $item.FullName -Recurse -Force
+            Write-Progress "Deleting " $tempFile.FullName
+            Remove-Item -Path $tempFile.FullName -Recurse -Force
             if ($? -eq $true) {
-                Write-Host "Deleted " $item.FullName
+                Write-Host "Deleted " $tempFile.FullName -ForegroundColor Green
             }
         }
         catch  [System.Exception] {
