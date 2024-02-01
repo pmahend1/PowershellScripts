@@ -31,57 +31,73 @@
 #>
 
 function Rename-GitBranch {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $OldName,
+  param(
+    [Parameter(Mandatory = $false)]
+    [string] $OldName = "",
 
-        [Parameter(Mandatory = $true)]
-        [string] $NewName,
+    [Parameter(Mandatory = $true)]
+    [string] $NewName,
 
-        [Parameter(Mandatory = $false)]
-        [string] $Remote = 'origin',
+    [Parameter(Mandatory = $false)]
+    [string] $Remote = 'origin',
 
-        [Parameter(Mandatory = $false)]
-        [switch] $DryRun
-    )
+    [Parameter(Mandatory = $false)]
+    [switch] $DryRun
+  )
 
+  try {
+    if ([string]::IsNullOrEmpty($OldName)) {
+      $OldName = git branch --show-current
+      Write-Host "Current branch is $OldName"
+    }
+
+    if ([string]::IsNullOrEmpty($OldName)) {
+      Write-Error "Error getting current branch name. Make sure git is installed and you are in a repo path."
+      return;
+    }
+  
+  
     if ($DryRun -eq $false) {
-        
-        git branch -m $OldName $NewName
-        Write-Host "Renamed $OldName to $NewName locally."
-        
-        git push $Remote --delete $OldName
-        Write-Host "Deleted $OldName on $Remote"
-
-
-        git branch --unset-upstream $NewName
-        Write-Host "Upstream of $NewName was unset to prevent pushing to $Remote/$OldName"
-
-        git push $Remote $NewName
-        Write-Host "Pushed $NewName to $Remote"
-
-        git push $Remote -u $NewName
-        Write-Host "$NewName upstream branch was reset."
+          
+      git branch -m $OldName $NewName
+      Write-Host "Renamed $OldName to $NewName locally." -ForegroundColor Green
+          
+      git push $Remote --delete $OldName
+      Write-Host "Deleted $OldName on $Remote" -ForegroundColor Green
+  
+  
+      git branch --unset-upstream $NewName
+      Write-Host "Upstream of $NewName was unset to prevent pushing to $Remote/$OldName" -ForegroundColor Green
+  
+      git push $Remote $NewName
+      Write-Host "Pushed $NewName to $Remote" -ForegroundColor Green
+  
+      git push $Remote -u $NewName
+      Write-Host "$NewName upstream branch was reset." -ForegroundColor Green
     } 
     else {
-        $text = "# Following commands will be run. 
-# Rename the local branch to the new name
-git branch -m $OldName $NewName
-
-# Delete the old branch on remote - where $Remote is, for example, origin
-git push $Remote --delete $OldName
-
-
-# Prevent git from using the old name when pushing in the next step.
-# Otherwise, git will use the old upstream name instead of $NewName.
-git branch --unset-upstream $NewName
-
-# Push the new branch to remote
-git push $Remote $NewName
-
-# Reset the upstream branch for the new_name local branch
-git push $Remote -u $NewName"
-
-        Write-Host $text -ForegroundColor DarkGray
+      $text = "# Following commands will be run. 
+  # Rename the local branch to the new name
+  git branch -m $OldName $NewName
+  
+  # Delete the old branch on remote - where $Remote is, for example, origin
+  git push $Remote --delete $OldName
+  
+  
+  # Prevent git from using the old name when pushing in the next step.
+  # Otherwise, git will use the old upstream name instead of $NewName.
+  git branch --unset-upstream $NewName
+  
+  # Push the new branch to remote
+  git push $Remote $NewName
+  
+  # Reset the upstream branch for the new_name local branch
+  git push $Remote -u $NewName"
+  
+      Write-Host $text -ForegroundColor DarkGray
     }
+  }
+  catch {
+    Write-Error $_
+  }
 }
