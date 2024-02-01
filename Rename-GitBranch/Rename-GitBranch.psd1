@@ -24,13 +24,13 @@
     Author            = 'Prateek Mahendrakar'
 
     # Company or vendor of this module
-    CompanyName       = 'Unknown'
+    # CompanyName       = ''
 
     # Copyright statement for this module
     Copyright         = '(c) Prateek Mahendrakar. All rights reserved.'
 
     # Description of the functionality provided by this module
-    # Description = ''
+    Description       = 'Renames a git branch locally and remotely.'
 
     # Minimum version of the PowerShell engine required by this module
     # PowerShellVersion = ''
@@ -69,7 +69,7 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @()
+    FunctionsToExport = @('Rename-GitBranch')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport   = @()
@@ -95,10 +95,10 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            # Tags = @()
+            Tags         = @('Rename-GitBranch', 'rename', 'git-rename', 'rename-git', 'rename-git-branch', 'git', 'branch-rename', 'Branch-Rename')
 
             # A URL to the license for this module.
-            # LicenseUri = ''
+            LicenseUri   = 'https://github.com/pmahend1/PowershellScripts/blob/main/LICENSE'
 
             # A URL to the main website for this project.
             # ProjectUri = ''
@@ -107,7 +107,7 @@
             # IconUri = ''
 
             # ReleaseNotes of this module
-            # ReleaseNotes = ''
+            ReleaseNotes = 'https://github.com/pmahend1/PowershellScripts/blob/main/README.md'
 
             # Prerelease string of this module
             # Prerelease = ''
@@ -123,7 +123,7 @@
     } # End of PrivateData hashtable
 
     # HelpInfo URI of this module
-    # HelpInfoURI = ''
+    HelpInfoURI       = 'https://github.com/pmahend1/PowershellScripts/blob/main/README.md'
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
     # DefaultCommandPrefix = ''
