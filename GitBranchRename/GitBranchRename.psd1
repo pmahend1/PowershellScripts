@@ -12,7 +12,7 @@
     # RootModule = ''
 
     # Version number of this module.
-    ModuleVersion     = '1.0.1'
+    ModuleVersion     = '1.2.0'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -24,7 +24,7 @@
     Author            = 'Prateek Mahendrakar'
 
     # Company or vendor of this module
-    # CompanyName       = ''
+    CompanyName       = 'Unknown'
 
     # Copyright statement for this module
     Copyright         = '(c) Prateek Mahendrakar. All rights reserved.'
@@ -33,8 +33,7 @@
     Description       = 'Renames a git branch locally and remotely.'
 
     # Minimum version of the PowerShell engine required by this module
-    # PowerShellVersion = ''
-
+    PowerShellVersion = '2.0'
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
 
