@@ -9,7 +9,7 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule = 'GitBranchRename.psm1'
+    RootModule = 'Rename-GitBranch.psm1'
 
     # Version number of this module.
     ModuleVersion     = '1.2.0'
@@ -24,7 +24,7 @@
     Author            = 'Prateek Mahendrakar'
 
     # Company or vendor of this module
-    CompanyName       = 'Unknown'
+    # CompanyName       = ''
 
     # Copyright statement for this module
     Copyright         = '(c) Prateek Mahendrakar. All rights reserved.'
