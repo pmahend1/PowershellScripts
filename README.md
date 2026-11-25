@@ -96,3 +96,16 @@ None.
 - Run `Rename-GitBranch -OldName {old-branch-name} -NewName {new-branch-name} -Remote {default:origin} -DryRun` with dryrun flag to know what commands will run.  
 - Leave out `-OldName` to rename the current branch.  
 - The new branch is pushed before the old one is deleted on the remote. If the push fails, the local rename is undone.
+## Running the tests
+
+Tests use [Pester](https://pester.dev) 5 or later and run on Windows (Windows PowerShell 5.1 and PowerShell 7+), macOS and Linux.
+
+```powershell
+Install-Module Pester -Scope CurrentUser -SkipPublisherCheck
+./Invoke-Tests.ps1
+# Skip the slow test that runs the real handle.exe
+./Invoke-Tests.ps1 -ExcludeTag Integration
+```
+
+- Tests only work in temporary folders (Pester's `$TestDrive`); they never touch your real temp folder or repositories.
+- Git tests use a local bare repository as the remote and a throwaway git config, so your own git settings don't affect them.
