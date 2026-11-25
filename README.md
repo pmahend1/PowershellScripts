@@ -1,5 +1,7 @@
 # PowershellScripts
 
+[![CI](https://github.com/pmahend1/PowershellScripts/actions/workflows/ci.yml/badge.svg)](https://github.com/pmahend1/PowershellScripts/actions/workflows/ci.yml)
+
 Collection of useful powershell scripts and modules published to [PowerShell Gallery](https://www.powershellgallery.com/packages?q=owner%3APrateekRM)
 
 ## [1. GitCleanOrphanBranches](https://www.powershellgallery.com/packages/GitCleanOrphanBranches)
@@ -109,3 +111,8 @@ Install-Module Pester -Scope CurrentUser -SkipPublisherCheck
 
 - Tests only work in temporary folders (Pester's `$TestDrive`); they never touch your real temp folder or repositories.
 - Git tests use a local bare repository as the remote and a throwaway git config, so your own git settings don't affect them.
+- CI runs the tests on every push and pull request on Windows (Windows PowerShell 5.1 and PowerShell 7), Ubuntu and macOS, and lints the modules with PSScriptAnalyzer using [PSScriptAnalyzerSettings.psd1](PSScriptAnalyzerSettings.psd1):
+
+  ```powershell
+  Invoke-ScriptAnalyzer -Path ./RemoveTempFiles -Recurse -Settings ./PSScriptAnalyzerSettings.psd1
+  ```
