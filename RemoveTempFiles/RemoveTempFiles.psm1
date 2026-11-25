@@ -113,16 +113,15 @@ function Remove-TempFiles {
                 if ($isDirectory) {
                     # rd is a cmd.exe built-in (in PowerShell, 'rd' is an alias for Remove-Item), so call it through cmd.exe.
                     # It keeps going past locked files and does not follow junctions.
-                    $null = cmd.exe /d /c "rd /s /q `"$($item.FullName)`"" 2>&1
+                    # The path goes in through an environment variable: cmd expands %VAR% only once, so a name
+                    # like '%OS%' stays literal. Put on the command line, cmd would expand it to another path.
+                    $env:REMOVE_TEMPFILES_TARGET = $item.FullName
+                    $null = cmd.exe /d /v:off /c 'rd /s /q "%REMOVE_TEMPFILES_TARGET%" >nul 2>&1'
                 }
                 else {
-                    try {
-                        $item.Attributes = [System.IO.FileAttributes]::Normal
-                        [System.IO.File]::Delete($item.FullName)
-                    }
-                    catch {
-                        # Reported below if the file still exists.
-                    }
+                    # -Force deletes read-only and hidden files. -ErrorAction Ignore: a locked file is
+                    # reported once, below, instead of also leaking the exception into -ErrorVariable.
+                    Remove-Item -LiteralPath $item.FullName -Force -ErrorAction Ignore
                 }
             }
             else {
@@ -143,6 +142,7 @@ function Remove-TempFiles {
 
         Write-Progress -Activity "Deleting temp files in $root" -Completed
     }
+    Remove-Item Env:\REMOVE_TEMPFILES_TARGET -ErrorAction Ignore
 
     if (-not $WhatIfPreference) {
         Write-Host "Deleted $deleted item(s). $failed item(s) could not be fully deleted." -ForegroundColor Green

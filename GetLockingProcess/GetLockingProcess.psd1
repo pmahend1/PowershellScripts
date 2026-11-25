@@ -72,7 +72,7 @@ PowerShellVersion = '2.0'
 FunctionsToExport = @('Get-LockingProcesses')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @('.\handle64.exe')
+CmdletsToExport = @()
 
 # Variables to export from this module
 VariablesToExport = '*'
@@ -81,13 +81,13 @@ VariablesToExport = '*'
 AliasesToExport = @('glp')
 
 # DSC resources to export from this module
-DscResourcesToExport = @('.\handle64.exe')
+# DscResourcesToExport = @()
 
 # List of all modules packaged with this module
 # ModuleList = @()
 
 # List of all files packaged with this module
-FileList = @('.\handle64.exe')
+FileList = @('GetLockingProcess.psm1', 'handle.exe', 'handle64.exe')
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{

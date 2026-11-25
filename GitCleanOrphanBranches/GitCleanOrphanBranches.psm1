@@ -26,9 +26,10 @@
 function Invoke-Git {
     # Native stderr would become an error record and stop the script if the caller uses -ErrorAction Stop.
     $ErrorActionPreference = 'Continue'
-    $output = & git @args 2>&1
+    # Turn stderr lines into strings in the same pipeline: in Windows PowerShell 5.1, collecting them
+    # first would also add git's normal stderr output (e.g. fetch progress) to the caller's -ErrorVariable.
+    $lines = @(& git @args 2>&1 | ForEach-Object { "$_" })
     $exitCode = $LASTEXITCODE
-    $lines = @($output | ForEach-Object { "$_" })
     if ($exitCode -ne 0) {
         throw "git $($args -join ' ') failed (exit $exitCode): $($lines -join [Environment]::NewLine)"
     }

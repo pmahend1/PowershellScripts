@@ -147,7 +147,10 @@ function Remove-BinObjFolders {
         if ($onWindows) {
             # rd is a cmd.exe built-in (in PowerShell, 'rd' is an alias for Remove-Item), so call it through cmd.exe.
             # It keeps going past locked files and does not follow junctions.
-            $null = cmd.exe /d /c "rd /s /q `"$folder`"" 2>&1
+            # The path goes in through an environment variable: cmd expands %VAR% only once, so a folder
+            # like '%OS%' stays literal. Put on the command line, cmd would expand it to another path.
+            $env:REMOVE_BINOBJ_TARGET = $folder
+            $null = cmd.exe /d /v:off /c 'rd /s /q "%REMOVE_BINOBJ_TARGET%" >nul 2>&1'
         }
         else {
             # Full path so the PowerShell 'rm' alias (Remove-Item) is never picked up.
@@ -164,6 +167,7 @@ function Remove-BinObjFolders {
         }
     }
     Write-Progress -Activity 'Remove-BinObjFolders' -Completed
+    Remove-Item Env:\REMOVE_BINOBJ_TARGET -ErrorAction Ignore
 
     if (-not $WhatIfPreference) {
         Write-Host "Deleted $deleted folder(s). $failed folder(s) could not be fully deleted." -ForegroundColor Green
