@@ -30,7 +30,7 @@ function Get-LockingProcesses {
     )
 
     [regex]$matchPattern = "(?m)^(?<Name>\w+\.\w+)\s+pid:\s+(?<PID>\d+)\s+type:\s+(?<Type>\w+)\s+(?<User>.+)\s+\w+:\s+(?<Path>.*)$"
-    $handle = '.\handle64.exe'
+    $handle = 'handle64.exe'
     $data = &$handle -u $Path -nobanner
     #$data = Start-Process $handle -ArgumentList u,$Path,nobanner
     $data = $data -join "`n"
