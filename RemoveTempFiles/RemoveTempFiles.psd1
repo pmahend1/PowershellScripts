@@ -12,7 +12,7 @@
     RootModule        = 'RemoveTempFiles.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.1.0'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -95,7 +95,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags         = @('Remove', 'Temp', 'Remove-TempFiles')
+            Tags         = @('Remove', 'Temp', 'Remove-TempFiles', 'Windows', 'MacOS', 'Linux', 'PSEdition_Desktop', 'PSEdition_Core')
 
             # A URL to the license for this module.
             LicenseUri   = 'https://github.com/pmahend1/PowershellScripts/blob/main/LICENSE'
