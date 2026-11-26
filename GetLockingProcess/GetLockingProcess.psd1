@@ -12,7 +12,7 @@
 RootModule = 'GetLockingProcess.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0'
+ModuleVersion = '1.1.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -87,7 +87,7 @@ AliasesToExport = @('glp')
 # ModuleList = @()
 
 # List of all files packaged with this module
-FileList = @('GetLockingProcess.psm1', 'handle.exe', 'handle64.exe')
+FileList = @('GetLockingProcess.psm1', 'handle.exe', 'handle64.exe', 'handle64a.exe', 'Eula.txt')
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{

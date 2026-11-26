@@ -61,7 +61,7 @@ Deletes bin, obj folders recursively.
 - Run `Get-LockingProcesses -Path {path}`
 
 > [!WARNING]
-> Windows only
+> Windows only. Ships Sysinternals Handle v5: `handle64.exe` (x64), `handle64a.exe` (ARM64), `handle.exe` (32-bit).
 
 ## [4. RemoveTempFiles](https://github.com/pmahend1/PowershellScripts/tree/main/RemoveTempFiles)
 

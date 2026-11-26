@@ -5,7 +5,8 @@
  .Description
   Gets locking processes blocking given file or folder. Windows only.
 
-  Uses Sysinternals handle.exe (handle64.exe on 64-bit Windows), which ships in the module folder.
+  Uses Sysinternals Handle v5, which ships in the module folder: handle64.exe on x64 Windows,
+  handle64a.exe on ARM64 Windows, handle.exe on 32-bit Windows.
   The Sysinternals EULA is accepted automatically (-accepteula), so the first run doesn't wait for it.
   Without administrator rights only handles of processes you can access are found.
 
@@ -23,13 +24,24 @@
   Get-LockingProcesses -name C:\Folder1\Folder2
 #>
 
+# Picks the handle build for this machine: handle64a.exe (ARM64), handle64.exe (x64) or handle.exe (x86).
+function Get-HandleExeName {
+    # OSArchitecture needs .NET Framework 4.7.1+ in Windows PowerShell 5.1; fall back to the environment.
+    # PROCESSOR_ARCHITEW6432 is set when a 32-bit process runs on 64-bit Windows.
+    $arch = try { "$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)" } catch { '' }
+    if (-not $arch) { $arch = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE } }
+
+    if ($arch -eq 'Arm64') { return 'handle64a.exe' }
+    if ($arch -eq 'X64' -or $arch -eq 'AMD64' -or [Environment]::Is64BitOperatingSystem) { return 'handle64.exe' }
+    return 'handle.exe'
+}
+
 # Runs handle.exe from the module folder and returns its output lines.
 # Separate function so tests can mock it.
 function Invoke-Handle {
     param([string] $Path)
 
-    $exe = if ([Environment]::Is64BitOperatingSystem) { 'handle64.exe' } else { 'handle.exe' }
-    $handle = Join-Path $PSScriptRoot $exe
+    $handle = Join-Path $PSScriptRoot (Get-HandleExeName)
     & $handle -accepteula -nobanner -u $Path 2>&1 | ForEach-Object { "$_" }
 }
 
@@ -50,7 +62,9 @@ function Get-LockingProcesses {
     }
 
     # Name is matched lazily up to ' pid:' so image names with dots, dashes or spaces work too.
-    [regex]$matchPattern = "(?m)^(?<Name>\S.*?)\s+pid:\s+(?<PID>\d+)\s+type:\s+(?<Type>\w+)\s+(?<User>.+?)\s+\w+:\s+(?<Path>.*?)\s*$"
+    # The handle column is hex: Handle 4.x prints '810:', Handle 5 prints '81008X' (no colon).
+    # Keeping it to hex digits + letters stops a user name with a space (NT AUTHORITY\SYSTEM) being split.
+    [regex]$matchPattern = "(?m)^(?<Name>\S.*?)\s+pid:\s+(?<PID>\d+)\s+type:\s+(?<Type>\w+)\s+(?<User>.+?)\s+[0-9A-Fa-f]+[A-Za-z]*:?\s+(?<Path>.*?)\s*$"
     $data = @(Invoke-Handle -Path $Path) -join "`n"
     $MyMatches = $matchPattern.Matches( $data )
 

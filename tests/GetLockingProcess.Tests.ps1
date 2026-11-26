@@ -64,6 +64,22 @@ Describe 'Get-LockingProcesses' {
             $result[0].Path | Should -Be 'C:\Data\file.txt'
         }
 
+        It 'parses the Handle 5 format (handle column without a colon)' {
+            Mock -ModuleName GetLockingProcess Invoke-Handle {
+                'pwsh.exe           pid: 25512  type: File          LEGION5PRO\Prateek        81008X C:\Users\Prateek\AppData\Local\Temp\lock me.txt'
+                'System             pid: 4      type: File          NT AUTHORITY\SYSTEM       1A4X C:\Data\file.txt'
+            }
+
+            $result = @(Get-LockingProcesses 'C:\')
+
+            $result | Should -HaveCount 2
+            $result[0].ID | Should -Be '25512'
+            $result[0].User | Should -Be 'LEGION5PRO\Prateek'
+            $result[0].Path | Should -Be 'C:\Users\Prateek\AppData\Local\Temp\lock me.txt'
+            $result[1].User | Should -Be 'NT AUTHORITY\SYSTEM'
+            $result[1].Path | Should -Be 'C:\Data\file.txt'
+        }
+
         It 'keeps paths with spaces and colons, and trims trailing spaces' {
             Mock -ModuleName GetLockingProcess Invoke-Handle {
                 'app.exe            pid: 42     type: File          DOMAIN\user                44: C:\My Files\a: b.txt   '
@@ -91,6 +107,30 @@ Describe 'Get-LockingProcesses' {
             }
 
             (glp -name 'C:\x').ID | Should -Be '1'
+        }
+    }
+
+    Context 'handle files' {
+
+        It 'ships every file in the manifest FileList, including all three handle builds' {
+            $moduleDir = Join-Path $PSScriptRoot '../GetLockingProcess'
+            $fileList = (Import-PowerShellDataFile (Join-Path $moduleDir 'GetLockingProcess.psd1')).FileList
+
+            $fileList | Should -Contain 'handle.exe'
+            $fileList | Should -Contain 'handle64.exe'
+            $fileList | Should -Contain 'handle64a.exe'
+            foreach ($file in $fileList) {
+                Test-Path -LiteralPath (Join-Path $moduleDir $file) | Should -BeTrue -Because "$file is in FileList"
+            }
+        }
+
+        It 'picks the handle build that matches this machine' -Skip:(-not $onWindows) {
+            $expected = switch ("$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)") {
+                'Arm64' { 'handle64a.exe' }
+                'X64' { 'handle64.exe' }
+                default { 'handle.exe' }
+            }
+            InModuleScope GetLockingProcess { Get-HandleExeName } | Should -Be $expected
         }
     }
 
