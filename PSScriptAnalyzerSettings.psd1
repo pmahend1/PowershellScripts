@@ -12,7 +12,7 @@
         # Invoke-Git branch -m $OldName $NewName
         PSAvoidUsingPositionalParameters = @{
             Enable           = $true
-            CommandAllowList = @('Invoke-Git', 'Test-Git', 'Get-GitExitCode')
+            CommandAllowList = @('Invoke-Git', 'Test-Git', 'Get-GitExitCode', 'Invoke-TestGit')
         }
     }
 }
