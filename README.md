@@ -43,6 +43,7 @@ Deletes bin, obj folders recursively.
 - Pass `Y` when prompted, or skip the prompt with `-Y` (same as `-Force`): `rbof -Y`
 - Preview what would be deleted: `Remove-BinObjFolders -WhatIf`
 - Hide errors for folders in use: `Remove-BinObjFolders -ErrorAction SilentlyContinue`
+- Only bin/obj folders next to a project or solution file (`.csproj`, `.fsproj`, `.vbproj`, `.sqlproj`, `.esproj`, `.wapproj`, `.proj`, `.sln`, `.slnx`, `.slnf`) are deleted, so unrelated `bin` folders (scripts, tools) are kept.
 - `.git` and `node_modules` are never searched. Works on Windows, macOS and Linux.
 
 ## [3. GetLockingProcess](https://github.com/pmahend1/PowershellScripts/tree/main/GetLockingProcess)
@@ -80,7 +81,7 @@ None.
 - Skip some entries: `Remove-TempFiles -Exclude 'vscode-*', 'MyApp'`  
   
 > [!NOTE]
-> Works on Windows, macOS and Linux. On macOS/Linux it cleans `$TMPDIR` (or `/tmp`) and always skips sockets, tmux/ssh-agent and X11 folders, and PowerShell/.NET IPC pipes.
+> Works on Windows, macOS and Linux. On macOS it cleans `$TMPDIR` and `~/Library/Caches`; on Linux `$TMPDIR` (or `/tmp`). On both it always skips `com.apple.*` entries, sockets, tmux/ssh-agent and X11 folders, and PowerShell/.NET IPC pipes.
 
 ## [5. Rename-GitBranch](https://github.com/pmahend1/PowershellScripts/tree/main/Rename-GitBranch)
 

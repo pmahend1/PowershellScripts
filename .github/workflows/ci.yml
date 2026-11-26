@@ -38,13 +38,30 @@ jobs:
       - name: Show PowerShell version
         run: $PSVersionTable
 
-      # Windows PowerShell ships Pester 3.4, which is signed by a different publisher,
-      # so Pester 5+ needs -SkipPublisherCheck.
       - name: Install Pester
+        if: matrix.shell == 'pwsh'
         run: |
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Install-Module Pester -MinimumVersion 5.0.0 -Scope CurrentUser -Force -SkipPublisherCheck
           Get-Module Pester -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1 Name, Version
+
+      # Install-Module in Windows PowerShell 5.1 takes ~105s on the runner; pwsh's Save-PSResource
+      # takes a few seconds. Save into the 5.1 current-user module folder so 5.1 finds it.
+      # -Repository PSGallery: the other registered repository (MicrosoftArtifactRegistry) has no
+      # Pester and reports "Not Found", which fails the step.
+      - name: Install Pester (via pwsh, for Windows PowerShell 5.1)
+        if: matrix.shell == 'powershell'
+        shell: pwsh
+        run: |
+          $modules = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'WindowsPowerShell\Modules'
+          New-Item -ItemType Directory -Path $modules -Force | Out-Null
+          Save-PSResource -Name Pester -Version '[5.0.0, )' -Repository PSGallery -Path $modules -TrustRepository -Quiet
+          Get-ChildItem (Join-Path $modules 'Pester') -Name
+
+      - name: Check Pester version
+        run: |
+          $pester = Get-Module Pester -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
+          $pester | Select-Object Name, Version, ModuleBase | Format-List
+          if ($pester.Version -lt [version]'5.0.0') { throw "Pester 5+ not found (found $($pester.Version))." }
 
       - name: Run tests
         run: ./Invoke-Tests.ps1
