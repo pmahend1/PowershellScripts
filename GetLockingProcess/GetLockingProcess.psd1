@@ -15,7 +15,7 @@ RootModule = 'GetLockingProcess.psm1'
 ModuleVersion = '1.1.0'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Desktop', 'Core')
 
 # ID used to uniquely identify this module
 GUID = '0133d55d-2c63-4692-a8ba-4bb7d10421ff'
@@ -33,7 +33,7 @@ Copyright = '(c) Prateek Mahendrakar. All rights reserved.'
 Description = 'Gets locking processes blocking given file or folder.'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '2.0'
+PowerShellVersion = '5.1'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'Locking-Process', 'File-Lock', 'Process', 'Locked', 'Windows'
+        Tags = @('Locking-Process', 'File-Lock', 'Process', 'Locked', 'Handle', 'Sysinternals', 'Windows', 'PSEdition_Desktop', 'PSEdition_Core')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/pmahend1/PowershellScripts/blob/main/LICENSE'
@@ -123,7 +123,7 @@ PrivateData = @{
 } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
+HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/blob/main/README.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''

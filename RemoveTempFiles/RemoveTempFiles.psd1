@@ -15,7 +15,7 @@
     ModuleVersion     = '1.2.0'
 
     # Supported PSEditions
-    # CompatiblePSEditions = @()
+    CompatiblePSEditions = @('Desktop', 'Core')
 
     # ID used to uniquely identify this module
     GUID              = 'f3fbe4de-1b77-4eb1-930a-375776134ad7'
@@ -33,7 +33,7 @@
     Description       = 'Delete Temp Files.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '2.0'
+    PowerShellVersion = '5.1'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''

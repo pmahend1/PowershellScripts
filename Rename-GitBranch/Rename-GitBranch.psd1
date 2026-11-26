@@ -15,7 +15,7 @@
     ModuleVersion     = '1.3.0'
 
     # Supported PSEditions
-    # CompatiblePSEditions = @()
+    CompatiblePSEditions = @('Desktop', 'Core')
 
     # ID used to uniquely identify this module
     GUID              = '2fdc4029-449f-4ed0-ad01-934e87f3634d'
@@ -33,7 +33,7 @@
     Description       = 'Renames a git branch locally and remotely.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '2.0'
+    PowerShellVersion = '5.1'
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
 
@@ -94,13 +94,13 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags         = @('Rename-GitBranch', 'rename', 'git-rename', 'rename-git', 'rename-git-branch', 'git', 'branch-rename', 'Branch-Rename')
+            Tags         = @('Rename-GitBranch', 'rename', 'git-rename', 'rename-git', 'rename-git-branch', 'git', 'branch-rename', 'Windows', 'MacOS', 'Linux', 'PSEdition_Desktop', 'PSEdition_Core')
 
             # A URL to the license for this module.
             LicenseUri   = 'https://github.com/pmahend1/PowershellScripts/blob/main/LICENSE'
 
             # A URL to the main website for this project.
-            # ProjectUri = ''
+            ProjectUri   = 'https://github.com/pmahend1/PowershellScripts'
 
             # A URL to an icon representing this module.
             # IconUri = ''
