@@ -1,3 +1,9 @@
+﻿# Pester shares variables between BeforeDiscovery/BeforeAll/BeforeEach and the It blocks, which the
+# analyzer can't see. Test helpers that create files don't need -WhatIf.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification = 'Pester scoping')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Test helpers')]
+param()
+
 BeforeAll {
     Import-Module (Join-Path $PSScriptRoot 'TestHelpers.psm1') -Force
     Import-Module (Join-Path $PSScriptRoot '../GitCleanOrphanBranches/GitCleanOrphanBranches.psd1') -Force

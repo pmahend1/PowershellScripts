@@ -1,3 +1,9 @@
+﻿# Pester shares variables between BeforeDiscovery/BeforeAll/BeforeEach and the It blocks, which the
+# analyzer can't see. Test helpers that create files don't need -WhatIf.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification = 'Pester scoping')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Test helpers')]
+param()
+
 BeforeDiscovery {
     $onWindows = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
     $isRoot = (-not $onWindows) -and ((& id -u) -eq '0')
@@ -14,6 +20,11 @@ BeforeAll {
         @(Get-ChildItem -LiteralPath $rootFull -Recurse -Directory -Force |
                 ForEach-Object { $_.FullName.Substring($rootFull.Length + 1) -replace '\\', '/' } |
                 Sort-Object)
+    }
+
+    # Puts a project file in each folder (relative to $Root), so its bin/obj folders get deleted.
+    function New-ProjectFile([string] $Root, [string[]] $Folder, [string] $Name = 'App.csproj') {
+        foreach ($f in $Folder) { $null = New-TestFile (Join-Path (Join-Path $Root $f) $Name) }
     }
 }
 
@@ -35,6 +46,7 @@ Describe 'Remove-BinObjFolders' {
         New-TestFile (Join-Path $root 'src/Lib/Lib.csproj')
         New-TestFile (Join-Path $root 'src/Lib/bin/Release/net8.0/Lib.dll')
         New-TestFile (Join-Path $root 'src/Lib/obj/Lib.csproj.nuget.g.props')
+        New-TestFile (Join-Path $root 'Tests.slnx')
         New-TestFile (Join-Path $root 'bin/top-level.dll')
 
         $out = Remove-BinObjFolders -Path $root -Force 6>&1
@@ -45,7 +57,43 @@ Describe 'Remove-BinObjFolders' {
         "$out" | Should -Match 'Deleted 5 folder\(s\)\. 0 folder\(s\) could not be fully deleted\.'
     }
 
+    It 'only deletes bin/obj folders next to a project or solution file' {
+        New-TestFile (Join-Path $root 'scripts/bin/run.sh')
+        New-TestFile (Join-Path $root 'docs/obj/x')
+        New-TestFile (Join-Path $root 'src/App.csproj.bak')
+        New-TestFile (Join-Path $root 'src/bin/x')
+
+        Remove-BinObjFolders -Path $root -Force -WarningVariable warnings -WarningAction SilentlyContinue 6>$null
+
+        Get-Folders $root | Should -Be @('docs', 'docs/obj', 'scripts', 'scripts/bin', 'src', 'src/bin')
+        "$warnings" | Should -Match 'No bin, obj folders found next to a project or solution file'
+    }
+
+    It 'recognizes every project and solution file type' -ForEach @(
+        @{ File = 'App.csproj' }, @{ File = 'App.fsproj' }, @{ File = 'App.vbproj' }, @{ File = 'Db.sqlproj' },
+        @{ File = 'Web.esproj' }, @{ File = 'Pkg.wapproj' }, @{ File = 'Build.proj' },
+        @{ File = 'All.sln' }, @{ File = 'All.slnx' }, @{ File = 'Some.slnf' }, @{ File = 'UPPER.CSPROJ' }
+    ) {
+        New-ProjectFile $root 'App' -Name $File
+        New-TestFile (Join-Path $root 'App/bin/x')
+        New-TestFile (Join-Path $root 'App/obj/x')
+
+        Remove-BinObjFolders -Path $root -Force 6>$null
+
+        Get-Folders $root | Should -Be @('App')
+    }
+
+    It 'searches inside a bin/obj folder it keeps' {
+        New-ProjectFile $root 'tools/bin/Nested'
+        New-TestFile (Join-Path $root 'tools/bin/Nested/obj/x')
+
+        Remove-BinObjFolders -Path $root -Force 6>$null
+
+        Get-Folders $root | Should -Be @('tools', 'tools/bin', 'tools/bin/Nested')
+    }
+
     It 'counts a bin/obj inside another bin/obj once (it is deleted with its parent)' {
+        New-ProjectFile $root 'App'
         New-TestFile (Join-Path $root 'App/bin/obj/x')
         New-TestFile (Join-Path $root 'App/obj/bin/y')
 
@@ -56,6 +104,7 @@ Describe 'Remove-BinObjFolders' {
     }
 
     It 'never searches .git or node_modules' {
+        New-ProjectFile $root '.git/objects', 'web/node_modules/pkg', 'web'
         New-TestFile (Join-Path $root '.git/objects/obj/x')
         New-TestFile (Join-Path $root 'web/node_modules/pkg/bin/cli.js')
         New-TestFile (Join-Path $root 'web/bin/x')
@@ -68,6 +117,7 @@ Describe 'Remove-BinObjFolders' {
     }
 
     It 'does not search folders matching -Exclude (wildcards allowed)' {
+        New-ProjectFile $root 'keep/App', 'vendor-a', 'vendor-b/sub', 'App'
         New-TestFile (Join-Path $root 'keep/App/bin/x')
         New-TestFile (Join-Path $root 'vendor-a/obj/x')
         New-TestFile (Join-Path $root 'vendor-b/sub/bin/x')
@@ -82,6 +132,7 @@ Describe 'Remove-BinObjFolders' {
     }
 
     It 'can exclude a bin/obj folder by name' {
+        New-ProjectFile $root 'App'
         New-TestFile (Join-Path $root 'App/bin/x')
         New-TestFile (Join-Path $root 'App/obj/x')
 
@@ -91,6 +142,7 @@ Describe 'Remove-BinObjFolders' {
     }
 
     It 'only matches folders named exactly bin or obj' {
+        New-ProjectFile $root 'App', 'Files'
         New-TestFile (Join-Path $root 'App/binaries/x')
         New-TestFile (Join-Path $root 'App/objects/x')
         New-TestFile (Join-Path $root 'App/my-bin/x')
@@ -106,6 +158,8 @@ Describe 'Remove-BinObjFolders' {
 
     It 'does not follow folder links out of the tree' {
         $outside = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
+        New-ProjectFile $outside '.', 'Other'
+        New-ProjectFile $root '.', 'App'
         New-TestFile (Join-Path $outside 'Other/bin/precious.dll')
         New-TestFile (Join-Path $outside 'bin/precious.dll')
         New-DirectoryLink -Path (Join-Path $root 'linked') -Target $outside
@@ -122,6 +176,7 @@ Describe 'Remove-BinObjFolders' {
     It 'handles folder names with spaces and special characters' {
         $names = @('with space', '-starts-with-dash', "it's", '[brackets]', 'amp&ersand', '100%', '%OS%', 'caret^', 'bang!', 'ünïcödé')
         foreach ($name in $names) {
+            New-ProjectFile $root $name
             New-TestFile (Join-Path $root "$name/bin/x.dll")
         }
 
@@ -132,6 +187,7 @@ Describe 'Remove-BinObjFolders' {
     }
 
     It 'searches the current folder when -Path is not given' {
+        New-ProjectFile $root 'App'
         New-TestFile (Join-Path $root 'App/bin/x')
         Push-Location -LiteralPath $root
         try {
@@ -145,6 +201,7 @@ Describe 'Remove-BinObjFolders' {
     }
 
     It 'accepts -Y and -Yes as -Force' {
+        New-ProjectFile $root 'A', 'B'
         New-TestFile (Join-Path $root 'A/bin/x')
         New-TestFile (Join-Path $root 'B/obj/x')
 
@@ -155,6 +212,7 @@ Describe 'Remove-BinObjFolders' {
     }
 
     It 'deletes nothing with -WhatIf' {
+        New-ProjectFile $root 'App'
         New-TestFile (Join-Path $root 'App/bin/x')
         New-TestFile (Join-Path $root 'App/obj/x')
 
@@ -179,6 +237,7 @@ Describe 'Remove-BinObjFolders' {
     Context 'Windows' -Skip:(-not $onWindows) {
 
         It 'matches bin/obj case-insensitively' {
+            New-ProjectFile $root 'A', 'B'
             New-TestFile (Join-Path $root 'A/Bin/x')
             New-TestFile (Join-Path $root 'B/OBJ/x')
 
@@ -188,6 +247,7 @@ Describe 'Remove-BinObjFolders' {
         }
 
         It 'reports a folder with a locked file and keeps deleting the rest' {
+            New-ProjectFile $root 'A', 'B'
             $locked = New-TestFile (Join-Path $root 'A/bin/locked.dll')
             New-TestFile (Join-Path $root 'A/bin/free.dll')
             New-TestFile (Join-Path $root 'B/obj/x')
@@ -207,6 +267,7 @@ Describe 'Remove-BinObjFolders' {
         }
 
         It 'deletes read-only and hidden files' {
+            New-ProjectFile $root 'A'
             $readOnly = New-TestFile (Join-Path $root 'A/bin/readonly.dll')
             $hidden = New-TestFile (Join-Path $root 'A/obj/hidden.txt')
             (Get-Item -LiteralPath $readOnly).Attributes = 'ReadOnly'
@@ -222,6 +283,7 @@ Describe 'Remove-BinObjFolders' {
 
         It 'only matches lowercase bin/obj' {
             # Separate parents: the macOS file system is case-insensitive, so bin and Bin can't be siblings.
+            New-ProjectFile $root 'A', 'B', 'C'
             New-TestFile (Join-Path $root 'A/Bin/x')
             New-TestFile (Join-Path $root 'B/OBJ/x')
             New-TestFile (Join-Path $root 'C/bin/x')
@@ -232,6 +294,7 @@ Describe 'Remove-BinObjFolders' {
         }
 
         It 'reports a folder it has no permission to delete' -Skip:$isRoot {
+            New-ProjectFile $root 'A', 'B'
             New-TestFile (Join-Path $root 'A/bin/sub/x')
             New-TestFile (Join-Path $root 'B/obj/x')
             $protected = Join-Path $root 'A/bin/sub'

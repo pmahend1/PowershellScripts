@@ -7,7 +7,11 @@
 
   Default folders:
     Windows     : user temp ($env:TEMP) and $env:windir\Temp
-    macOS/Linux : the user temp folder ($TMPDIR, falls back to /tmp)
+    macOS       : the user temp folder ($TMPDIR) and the user cache folder (~/Library/Caches)
+    Linux       : the user temp folder ($TMPDIR, falls back to /tmp)
+
+  Apps rebuild their caches, so the first launch after cleaning can be slower.
+  com.apple.* entries are always skipped on macOS; many of them are protected by the system.
 
   Each top-level entry is deleted in a single native call instead of enumerating and deleting
   every file through Remove-Item:
@@ -59,6 +63,10 @@ function Remove-TempFiles {
         }
         else {
             $Path = @([System.IO.Path]::GetTempPath())
+            # $IsMacOS exists here: this branch only runs in PowerShell 6+, the only version on macOS/Linux.
+            if ($IsMacOS) {
+                $Path += Join-Path $HOME 'Library/Caches'
+            }
         }
     }
 

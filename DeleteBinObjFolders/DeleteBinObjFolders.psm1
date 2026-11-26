@@ -5,6 +5,11 @@
  .Description
   Deletes bin, obj folders recursively under the current folder (or -Path). Works on Windows, macOS and Linux.
 
+  Only bin/obj folders next to a .NET project or solution file are deleted, so unrelated folders
+  named bin (scripts, tools) are left alone. Recognized files:
+    .csproj .fsproj .vbproj .sqlproj .esproj .wapproj .proj .sln .slnx .slnf
+  A bin/obj folder without one is searched like any other folder.
+
   The search does not go into bin/obj folders it found, excluded folders, .git, node_modules,
   or symlinks/junctions. Each folder found is then deleted in a single native call instead of
   through Remove-Item:
@@ -42,6 +47,24 @@
   # Same as -Force
   rbof -Y
 #>
+
+# File extensions that mark a folder as a .NET project or solution folder.
+$script:ProjectExtensions = @('.csproj', '.fsproj', '.vbproj', '.sqlproj', '.esproj', '.wapproj', '.proj', '.sln', '.slnx', '.slnf')
+
+# True if the folder directly contains a project or solution file.
+function Test-ProjectFolder([System.IO.DirectoryInfo] $Directory) {
+    try {
+        foreach ($file in $Directory.EnumerateFiles()) {
+            # -contains is case-insensitive, so App.CSPROJ counts too.
+            if ($script:ProjectExtensions -contains $file.Extension) { return $true }
+        }
+    }
+    catch {
+        Write-Verbose "Could not list files in $($Directory.FullName): $($_.Exception.Message)"
+    }
+    return $false
+}
+
 function Remove-BinObjFolders {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param
@@ -88,6 +111,9 @@ function Remove-BinObjFolders {
             continue
         }
 
+        # Checked only when $dir has a bin/obj child, and then only once.
+        $isProjectFolder = $null
+
         foreach ($child in $children) {
             # Don't follow symlinks/junctions out of the tree.
             if (($child.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { continue }
@@ -103,17 +129,20 @@ function Remove-BinObjFolders {
 
             $isTarget = if ($onWindows) { $targetNames -contains $child.Name } else { $targetNames -ccontains $child.Name }
             if ($isTarget) {
-                $found.Add($child.FullName)
+                if ($null -eq $isProjectFolder) { $isProjectFolder = Test-ProjectFolder $dir }
+                if ($isProjectFolder) {
+                    $found.Add($child.FullName)
+                    continue
+                }
+                Write-Verbose "Kept $($child.FullName): no project or solution file next to it."
             }
-            else {
-                $pending.Push($child)
-            }
+            $pending.Push($child)
         }
     }
     Write-Progress -Activity 'Remove-BinObjFolders' -Completed
 
     if ($found.Count -eq 0) {
-        Write-Warning 'No bin, obj folders found!'
+        Write-Warning 'No bin, obj folders found next to a project or solution file!'
         return
     }
 

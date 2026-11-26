@@ -1,3 +1,7 @@
+﻿# Test helpers that create files and repositories don't need -WhatIf.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Test helpers')]
+param()
+
 # Shared helpers for the Pester tests. Works on Windows PowerShell 5.1 and PowerShell 7+.
 
 function Test-OnWindows {

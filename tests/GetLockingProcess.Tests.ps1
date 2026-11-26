@@ -1,3 +1,9 @@
+﻿# Pester shares variables between BeforeDiscovery/BeforeAll/BeforeEach and the It blocks, which the
+# analyzer can't see. Test helpers that create files don't need -WhatIf.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification = 'Pester scoping')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Test helpers')]
+param()
+
 BeforeDiscovery {
     $onWindows = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
 }
@@ -64,6 +70,22 @@ Describe 'Get-LockingProcesses' {
             $result[0].Path | Should -Be 'C:\Data\file.txt'
         }
 
+        It 'parses the Handle 5 format (handle column without a colon)' {
+            Mock -ModuleName GetLockingProcess Invoke-Handle {
+                'pwsh.exe           pid: 25512  type: File          LEGION5PRO\Prateek        81008X C:\Users\Prateek\AppData\Local\Temp\lock me.txt'
+                'System             pid: 4      type: File          NT AUTHORITY\SYSTEM       1A4X C:\Data\file.txt'
+            }
+
+            $result = @(Get-LockingProcesses 'C:\')
+
+            $result | Should -HaveCount 2
+            $result[0].ID | Should -Be '25512'
+            $result[0].User | Should -Be 'LEGION5PRO\Prateek'
+            $result[0].Path | Should -Be 'C:\Users\Prateek\AppData\Local\Temp\lock me.txt'
+            $result[1].User | Should -Be 'NT AUTHORITY\SYSTEM'
+            $result[1].Path | Should -Be 'C:\Data\file.txt'
+        }
+
         It 'keeps paths with spaces and colons, and trims trailing spaces' {
             Mock -ModuleName GetLockingProcess Invoke-Handle {
                 'app.exe            pid: 42     type: File          DOMAIN\user                44: C:\My Files\a: b.txt   '
@@ -94,10 +116,89 @@ Describe 'Get-LockingProcesses' {
         }
     }
 
+    Context 'finding Handle' -Skip:(-not $onWindows) {
+        # Nothing is downloaded here: PATH, the download and the signature check are all mocked.
+
+        BeforeEach {
+            $cache = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
+            $originalCache = InModuleScope GetLockingProcess { $script:HandleCacheDir }
+            InModuleScope GetLockingProcess -Parameters @{ Cache = $cache } { param($Cache) $script:HandleCacheDir = $Cache }
+            $exeName = InModuleScope GetLockingProcess { Get-HandleExeName }
+
+            Mock -ModuleName GetLockingProcess Get-Command { }
+            # Fake download: a zip holding empty handle exes.
+            Mock -ModuleName GetLockingProcess Invoke-WebRequest {
+                $src = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
+                foreach ($name in 'handle.exe', 'handle64.exe', 'handle64a.exe', 'Eula.txt') { $null = New-TestFile (Join-Path $src $name) }
+                Compress-Archive -Path (Join-Path $src '*') -DestinationPath $OutFile
+            }
+            Mock -ModuleName GetLockingProcess Test-MicrosoftSignature { $true }
+        }
+
+        AfterEach {
+            InModuleScope GetLockingProcess -Parameters @{ Cache = $originalCache } { param($Cache) $script:HandleCacheDir = $Cache }
+        }
+
+        It 'picks the handle build that matches this machine' {
+            $expected = switch ("$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)") {
+                'Arm64' { 'handle64a.exe' }
+                'X64' { 'handle64.exe' }
+                default { 'handle.exe' }
+            }
+            $exeName | Should -Be $expected
+        }
+
+        It 'does not ship handle with the module (its license does not allow it)' {
+            $moduleDir = Join-Path $PSScriptRoot '../GetLockingProcess'
+            @(Get-ChildItem -LiteralPath $moduleDir -Filter 'handle*.exe') | Should -HaveCount 0
+            (Import-PowerShellDataFile (Join-Path $moduleDir 'GetLockingProcess.psd1')).FileList | Should -Be @('GetLockingProcess.psm1')
+        }
+
+        It 'uses handle from PATH when it is there' {
+            Mock -ModuleName GetLockingProcess Get-Command { [pscustomobject]@{ Source = 'C:\Tools\handle64.exe' } }
+
+            InModuleScope GetLockingProcess { Get-HandlePath } | Should -Be 'C:\Tools\handle64.exe'
+            Should -Invoke -ModuleName GetLockingProcess Invoke-WebRequest -Times 0 -Exactly
+        }
+
+        It 'downloads handle once, warns about the license, and reuses the download' {
+            $output = @(InModuleScope GetLockingProcess { Get-HandlePath 3>&1 })
+            $warnings = @($output | Where-Object { $_ -is [System.Management.Automation.WarningRecord] })
+            $first = $output | Where-Object { $_ -is [string] }
+            $second = @(InModuleScope GetLockingProcess { Get-HandlePath 3>&1 })
+
+            $warnings | Should -HaveCount 1
+            $second | Should -HaveCount 1 -Because 'the second call neither downloads nor warns'
+            $first | Should -Be (Join-Path $cache $exeName)
+            $second | Should -Be $first
+            Test-Path -LiteralPath (Join-Path $cache 'Eula.txt') | Should -BeTrue
+            "$warnings" | Should -Match 'license-terms'
+            Should -Invoke -ModuleName GetLockingProcess Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                $Uri -eq 'https://download.sysinternals.com/files/Handle.zip'
+            }
+        }
+
+        It 'does not use a download that is not signed by Microsoft' {
+            Mock -ModuleName GetLockingProcess Test-MicrosoftSignature { $false }
+
+            { InModuleScope GetLockingProcess { Get-HandlePath } 3>$null } | Should -Throw '*not signed by Microsoft*'
+            Test-Path -LiteralPath (Join-Path $cache $exeName) | Should -BeFalse
+        }
+
+        It 'writes an error when Handle cannot be downloaded' {
+            Mock -ModuleName GetLockingProcess Invoke-WebRequest { throw 'No network' }
+
+            Get-LockingProcesses 'C:\Data' -ErrorVariable errors -ErrorAction SilentlyContinue 3>$null
+
+            "$errors" | Should -Match 'Could not run Sysinternals Handle: No network'
+        }
+    }
+
     Context 'with the real handle.exe' -Skip:(-not $onWindows) {
 
         It 'finds this PowerShell process holding a file open' -Tag 'Integration' {
-            # Runs handle64.exe/handle.exe from the module folder; -accepteula keeps it from waiting
+            # Runs the real Handle: from PATH, else the download folder, else downloaded from Microsoft first
+            # (that is how CI tests the real download and signature check). -accepteula keeps it from waiting
             # for a prompt. Without admin rights it still sees handles of the current user's processes.
             $file = New-TestFile (Join-Path $TestDrive "locked-$([guid]::NewGuid().ToString('N')).txt")
             $stream = Lock-TestFile $file

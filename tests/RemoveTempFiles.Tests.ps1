@@ -1,3 +1,9 @@
+﻿# Pester shares variables between BeforeDiscovery/BeforeAll/BeforeEach and the It blocks, which the
+# analyzer can't see. Test helpers that create files don't need -WhatIf.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification = 'Pester scoping')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Test helpers')]
+param()
+
 BeforeDiscovery {
     $onWindows = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
     $isRoot = (-not $onWindows) -and ((& id -u) -eq '0')
@@ -145,11 +151,19 @@ Describe 'Remove-TempFiles' {
             "$($warnings[1])" | Should -BeLike "*'$(Join-Path $env:windir 'Temp')'*"
         }
 
-        It 'uses the user temp folder on macOS/Linux' -Skip:$onWindows {
+        It 'uses the user temp folder on Linux' -Skip:($onWindows -or $IsMacOS) {
             Remove-TempFiles -WhatIf -WarningVariable warnings -WarningAction SilentlyContinue 6>$null
 
             $warnings | Should -HaveCount 1
             "$($warnings[0])" | Should -BeLike "*'$([System.IO.Path]::GetTempPath())'*"
+        }
+
+        It 'uses the user temp and cache folders on macOS' -Skip:(-not $IsMacOS) {
+            Remove-TempFiles -WhatIf -WarningVariable warnings -WarningAction SilentlyContinue 6>$null
+
+            $warnings | Should -HaveCount 2
+            "$($warnings[0])" | Should -BeLike "*'$([System.IO.Path]::GetTempPath())'*"
+            "$($warnings[1])" | Should -BeLike "*'$(Join-Path $HOME 'Library/Caches')'*"
         }
     }
 
