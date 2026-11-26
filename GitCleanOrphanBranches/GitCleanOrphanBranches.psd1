@@ -15,7 +15,7 @@ RootModule = 'GitCleanOrphanBranches.psm1'
 ModuleVersion = '1.3.0'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Desktop', 'Core')
 
 # ID used to uniquely identify this module
 GUID = '279e82d0-ec0f-4d37-8a85-c84ef7bc7e50'
@@ -33,7 +33,7 @@ Copyright = '(c) Prateek Mahendrakar. All rights reserved.'
 Description = 'Deletes orphan branches deleted from remote but present in local'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '2.0'
+PowerShellVersion = '5.1'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('Git','Cleanup-Orphans','Clean-up','Delete-Orphan-Branches')
+        Tags = @('Git', 'Cleanup-Orphans', 'Clean-up', 'Delete-Orphan-Branches', 'Windows', 'MacOS', 'Linux', 'PSEdition_Desktop', 'PSEdition_Core')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/pmahend1/PowershellScripts/blob/main/LICENSE'
@@ -123,7 +123,7 @@ PrivateData = @{
  } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
+HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/blob/main/README.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''

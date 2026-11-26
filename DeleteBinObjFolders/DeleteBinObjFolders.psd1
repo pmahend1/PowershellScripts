@@ -15,7 +15,7 @@
     ModuleVersion     = '2.3.0'
 
     # Supported PSEditions
-    # CompatiblePSEditions = @()
+    CompatiblePSEditions = @('Desktop', 'Core')
 
     # ID used to uniquely identify this module
     GUID              = '18e3048b-8a8f-4579-b5c6-321a06c42753'
@@ -33,7 +33,7 @@
     Description       = 'Delete bin, obj folders recursively.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '2.0'
+    PowerShellVersion = '5.1'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
