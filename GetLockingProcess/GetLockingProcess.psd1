@@ -54,7 +54,7 @@ PowerShellVersion = '2.0'
 # RequiredModules = @('.\handl64.exe')
 
 # Assemblies that must be loaded prior to importing this module
-# RequiredAssemblies = @('handle64.exe')
+# RequiredAssemblies = @()
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 # ScriptsToProcess = @()
@@ -87,7 +87,7 @@ AliasesToExport = @('glp')
 # ModuleList = @()
 
 # List of all files packaged with this module
-FileList = @('GetLockingProcess.psm1', 'handle.exe', 'handle64.exe', 'handle64a.exe', 'Eula.txt')
+FileList = @('GetLockingProcess.psm1')
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
@@ -130,7 +130,3 @@ HelpInfoURI = 'https://github.com/pmahend1/PowershellScripts/ReadMe.md'
 
 }
 
-# handle64 = @{
-#     DependencyType = 'FileSystem'
-#     Source = '.\handle64.exe'
-# }

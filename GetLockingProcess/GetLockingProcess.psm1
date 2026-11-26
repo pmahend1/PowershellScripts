@@ -5,9 +5,17 @@
  .Description
   Gets locking processes blocking given file or folder. Windows only.
 
-  Uses Sysinternals Handle v5, which ships in the module folder: handle64.exe on x64 Windows,
-  handle64a.exe on ARM64 Windows, handle.exe on 32-bit Windows.
-  The Sysinternals EULA is accepted automatically (-accepteula), so the first run doesn't wait for it.
+  Uses Sysinternals Handle: handle64.exe on x64 Windows, handle64a.exe on ARM64 Windows,
+  handle.exe on 32-bit Windows. Handle is not shipped with this module (its license does not
+  allow that). It is found in this order:
+    1. On PATH (e.g. installed with the Sysinternals Suite).
+    2. In $env:LOCALAPPDATA\GetLockingProcess\Handle, from an earlier download.
+    3. Downloaded once from https://download.sysinternals.com/files/Handle.zip into that folder.
+       The download is only used if it is signed by Microsoft.
+
+  By using Handle you accept the Sysinternals license terms:
+  https://learn.microsoft.com/sysinternals/license-terms
+  Handle runs with -accepteula, so it doesn't stop to show the license dialog.
   Without administrator rights only handles of processes you can access are found.
 
  .Parameter Path
@@ -36,12 +44,76 @@ function Get-HandleExeName {
     return 'handle.exe'
 }
 
-# Runs handle.exe from the module folder and returns its output lines.
-# Separate function so tests can mock it.
+$script:HandleUrl = 'https://download.sysinternals.com/files/Handle.zip'
+$script:LicenseUrl = 'https://learn.microsoft.com/sysinternals/license-terms'
+# Script variable so tests can point it at a temporary folder.
+$script:HandleCacheDir = if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'GetLockingProcess\Handle' } else { '' }
+
+# True if the file has a valid Authenticode signature from Microsoft.
+function Test-MicrosoftSignature([string] $FilePath) {
+    $signature = Get-AuthenticodeSignature -LiteralPath $FilePath
+    return $signature.Status -eq 'Valid' -and "$($signature.SignerCertificate.Subject)" -like 'CN=Microsoft Corporation,*'
+}
+
+# Downloads Handle.zip into $script:HandleCacheDir. Throws if the download fails or isn't signed by Microsoft.
+function Install-Handle {
+    Write-Warning "Sysinternals Handle not found. Downloading it once from $script:HandleUrl to $script:HandleCacheDir. By using it you accept the Sysinternals license terms: $script:LicenseUrl"
+
+    $work = Join-Path ([System.IO.Path]::GetTempPath()) "GetLockingProcess-$([guid]::NewGuid().ToString('N'))"
+    $null = New-Item -ItemType Directory -Path $work -Force
+    try {
+        $zip = Join-Path $work 'Handle.zip'
+        $extracted = Join-Path $work 'Handle'
+        # Windows PowerShell 5.1 may not offer TLS 1.2 by default, and its progress bar slows downloads a lot.
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $script:HandleUrl -OutFile $zip -UseBasicParsing -ErrorAction Stop
+        # .NET directly rather than Expand-Archive: the Archive module may be missing or (in 5.1 started
+        # from pwsh) be pwsh's copy, which doesn't work in 5.1.
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $extracted)
+
+        $exes = @(Get-ChildItem -LiteralPath $extracted -Filter 'handle*.exe')
+        if ($exes.Count -eq 0) { throw "$script:HandleUrl did not contain handle.exe." }
+        foreach ($exe in $exes) {
+            if (-not (Test-MicrosoftSignature $exe.FullName)) {
+                throw "$($exe.Name) from $script:HandleUrl is not signed by Microsoft, so it was not used."
+            }
+        }
+
+        # Copy only after every file passed the signature check.
+        $null = New-Item -ItemType Directory -Path $script:HandleCacheDir -Force
+        Get-ChildItem -LiteralPath $extracted -File | Copy-Item -Destination $script:HandleCacheDir -Force -ErrorAction Stop
+    }
+    finally {
+        Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# Full path of the handle exe to run: from PATH, else the download folder, else downloads it first.
+function Get-HandlePath {
+    $exeName = Get-HandleExeName
+
+    # handle.exe last: the 32-bit build also works on 64-bit Windows.
+    foreach ($name in @($exeName, 'handle.exe') | Select-Object -Unique) {
+        $command = Get-Command $name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($command) { return $command.Source }
+    }
+
+    if (-not $script:HandleCacheDir) { throw 'LOCALAPPDATA is not set, so Handle cannot be downloaded. Put handle.exe on PATH.' }
+    $cached = Join-Path $script:HandleCacheDir $exeName
+    if (-not (Test-Path -LiteralPath $cached)) {
+        Install-Handle
+    }
+    if (-not (Test-Path -LiteralPath $cached)) { throw "$exeName was not found in the download from $script:HandleUrl." }
+    return $cached
+}
+
+# Runs handle and returns its output lines. Separate function so tests can mock it.
 function Invoke-Handle {
     param([string] $Path)
 
-    $handle = Join-Path $PSScriptRoot (Get-HandleExeName)
+    $handle = Get-HandlePath
     & $handle -accepteula -nobanner -u $Path 2>&1 | ForEach-Object { "$_" }
 }
 
@@ -65,7 +137,13 @@ function Get-LockingProcesses {
     # The handle column is hex: Handle 4.x prints '810:', Handle 5 prints '81008X' (no colon).
     # Keeping it to hex digits + letters stops a user name with a space (NT AUTHORITY\SYSTEM) being split.
     [regex]$matchPattern = "(?m)^(?<Name>\S.*?)\s+pid:\s+(?<PID>\d+)\s+type:\s+(?<Type>\w+)\s+(?<User>.+?)\s+[0-9A-Fa-f]+[A-Za-z]*:?\s+(?<Path>.*?)\s*$"
-    $data = @(Invoke-Handle -Path $Path) -join "`n"
+    try {
+        $data = @(Invoke-Handle -Path $Path) -join "`n"
+    }
+    catch {
+        Write-Error "Could not run Sysinternals Handle: $($_.Exception.Message)"
+        return
+    }
     $MyMatches = $matchPattern.Matches( $data )
 
     if ($MyMatches.count) {
