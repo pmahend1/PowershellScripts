@@ -199,7 +199,9 @@ function Remove-BinObjFolders {
     Remove-Item Env:\REMOVE_BINOBJ_TARGET -ErrorAction Ignore
 
     if (-not $WhatIfPreference) {
-        Write-Host "Deleted $deleted folder(s). $failed folder(s) could not be fully deleted." -ForegroundColor Green
+        $deletedNoun = if ($deleted -eq 1) { 'folder' } else { 'folders' }
+        $failedNoun = if ($failed -eq 1) { 'folder' } else { 'folders' }
+        Write-Host "Deleted $deleted $deletedNoun. $failed $failedNoun could not be fully deleted." -ForegroundColor Green
     }
 }
 

@@ -6,13 +6,13 @@ param()
 
 BeforeAll {
     Import-Module (Join-Path $PSScriptRoot 'TestHelpers.psm1') -Force
-    Import-Module (Join-Path $PSScriptRoot '../GitCleanOrphanBranches/GitCleanOrphanBranches.psd1') -Force
+    Import-Module (Join-Path $PSScriptRoot '../Remove-GitOrphanBranches/Remove-GitOrphanBranches.psd1') -Force
     $savedGitEnv = Initialize-GitTestEnvironment -Root (Join-Path $TestDrive 'gitenv')
 }
 
 AfterAll {
     Restore-GitTestEnvironment $savedGitEnv
-    Remove-Module GitCleanOrphanBranches, TestHelpers -ErrorAction SilentlyContinue
+    Remove-Module Remove-GitOrphanBranches, TestHelpers -ErrorAction SilentlyContinue
 }
 
 Describe 'Remove-GitOrphanBranches' {
