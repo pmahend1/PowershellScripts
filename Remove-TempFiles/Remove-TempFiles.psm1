@@ -153,6 +153,8 @@ function Remove-TempFiles {
     Remove-Item Env:\REMOVE_TEMPFILES_TARGET -ErrorAction Ignore
 
     if (-not $WhatIfPreference) {
-        Write-Host "Deleted $deleted item(s). $failed item(s) could not be fully deleted." -ForegroundColor Green
+        $deletedNoun = if ($deleted -eq 1) { 'item' } else { 'items' }
+        $failedNoun = if ($failed -eq 1) { 'item' } else { 'items' }
+        Write-Host "Deleted $deleted $deletedNoun. $failed $failedNoun could not be fully deleted." -ForegroundColor Green
     }
 }

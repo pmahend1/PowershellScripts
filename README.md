@@ -4,13 +4,28 @@
 
 Collection of useful powershell scripts and modules published to [PowerShell Gallery](https://www.powershellgallery.com/packages?q=owner%3APrateekRM)
 
-## [1. GitCleanOrphanBranches](https://www.powershellgallery.com/packages/GitCleanOrphanBranches)
+> [!IMPORTANT]
+> Each module is now named after its command, so `Update-Module <command>` works. The old modules are no longer updated. If you installed one of them, uninstall it and install the new one:
+>
+> | Old module | New module |
+> | --- | --- |
+> | `GitCleanOrphanBranches` | `Remove-GitOrphanBranches` |
+> | `DeleteBinObjFolders` | `Remove-BinObjFolders` |
+> | `GetLockingProcess` | `Get-LockingProcesses` |
+> | `RemoveTempFiles` | `Remove-TempFiles` |
+>
+> ```powershell
+> Uninstall-Module -Name GitCleanOrphanBranches, DeleteBinObjFolders, GetLockingProcess, RemoveTempFiles -AllVersions -ErrorAction SilentlyContinue
+> Install-Module -Name Remove-GitOrphanBranches, Remove-BinObjFolders, Get-LockingProcesses, Remove-TempFiles
+> ```
+
+## [1. Remove-GitOrphanBranches](https://www.powershellgallery.com/packages/Remove-GitOrphanBranches)
 
 Deletes orphan branches deleted from remote but present in local.
 
 ### 1.1 Installation
 
-`Install-Module -Name GitCleanOrphanBranches`
+`Install-Module -Name Remove-GitOrphanBranches`
 
 ### 1.2 Aliases
 
@@ -23,13 +38,13 @@ Deletes orphan branches deleted from remote but present in local.
 - Preview what would be deleted: `Remove-GitOrphanBranches -WhatIf`
 - The current branch and branches checked out in other worktrees are never deleted.
 
-## [2. DeleteBinObjFolders](https://www.powershellgallery.com/packages/DeleteBinObjFolders)
+## [2. Remove-BinObjFolders](https://www.powershellgallery.com/packages/Remove-BinObjFolders)
 
 Deletes bin, obj folders recursively.
 
 ### 2.1 Installation
 
-`Install-Module -Name DeleteBinObjFolders`
+`Install-Module -Name Remove-BinObjFolders`
 
 ### 2.2 Aliases
 
@@ -46,11 +61,11 @@ Deletes bin, obj folders recursively.
 - Only bin/obj folders next to a project or solution file (`.csproj`, `.fsproj`, `.vbproj`, `.sqlproj`, `.esproj`, `.wapproj`, `.proj`, `.sln`, `.slnx`, `.slnf`) are deleted, so unrelated `bin` folders (scripts, tools) are kept.
 - `.git` and `node_modules` are never searched. Works on Windows, macOS and Linux.
 
-## [3. GetLockingProcess](https://github.com/pmahend1/PowershellScripts/tree/main/GetLockingProcess)
+## [3. Get-LockingProcesses](https://www.powershellgallery.com/packages/Get-LockingProcesses)
 
 ### 3.1 Installation
 
-`Install-Module -Name GetLockingProcess`
+`Install-Module -Name Get-LockingProcesses`
 
 ### 3.2 Aliases
 
@@ -63,11 +78,11 @@ Deletes bin, obj folders recursively.
 > [!WARNING]
 > Windows only. Uses [Sysinternals Handle](https://learn.microsoft.com/sysinternals/downloads/handle), which is not shipped with the module. It uses `handle64.exe` (x64), `handle64a.exe` (ARM64) or `handle.exe` (32-bit) from PATH; if it's not there, it downloads Handle once from Microsoft into `%LOCALAPPDATA%\GetLockingProcess\Handle` and only uses it if it's signed by Microsoft. By using it you accept the [Sysinternals license terms](https://learn.microsoft.com/sysinternals/license-terms).
 
-## [4. RemoveTempFiles](https://github.com/pmahend1/PowershellScripts/tree/main/RemoveTempFiles)
+## [4. Remove-TempFiles](https://www.powershellgallery.com/packages/Remove-TempFiles)
 
 ### 4.1 Installation
 
-`Install-Module -Name RemoveTempFiles`
+`Install-Module -Name Remove-TempFiles`
 
 ### 4.2 Aliases
 
@@ -83,7 +98,7 @@ None.
 > [!NOTE]
 > Works on Windows, macOS and Linux. On macOS it cleans `$TMPDIR` and `~/Library/Caches`; on Linux `$TMPDIR` (or `/tmp`). On both it always skips `com.apple.*` entries, sockets, tmux/ssh-agent and X11 folders, and PowerShell/.NET IPC pipes.
 
-## [5. Rename-GitBranch](https://github.com/pmahend1/PowershellScripts/tree/main/Rename-GitBranch)
+## [5. Rename-GitBranch](https://www.powershellgallery.com/packages/Rename-GitBranch)
 
 ### 5.1 Installation
 
@@ -99,6 +114,7 @@ None.
 - Run `Rename-GitBranch -OldName {old-branch-name} -NewName {new-branch-name} -Remote {default:origin} -DryRun` with dryrun flag to know what commands will run.  
 - Leave out `-OldName` to rename the current branch.  
 - The new branch is pushed before the old one is deleted on the remote. If the push fails, the local rename is undone.
+
 ## Running the tests
 
 Tests use [Pester](https://pester.dev) 5 or later and run on Windows (Windows PowerShell 5.1 and PowerShell 7+), macOS and Linux.
@@ -115,5 +131,5 @@ Install-Module Pester -Scope CurrentUser -SkipPublisherCheck
 - CI runs the tests on every push and pull request on Windows (Windows PowerShell 5.1 and PowerShell 7), Ubuntu and macOS, and lints the modules with PSScriptAnalyzer using [PSScriptAnalyzerSettings.psd1](PSScriptAnalyzerSettings.psd1):
 
   ```powershell
-  Invoke-ScriptAnalyzer -Path ./RemoveTempFiles -Recurse -Settings ./PSScriptAnalyzerSettings.psd1
+  Invoke-ScriptAnalyzer -Path ./Remove-TempFiles -Recurse -Settings ./PSScriptAnalyzerSettings.psd1
   ```

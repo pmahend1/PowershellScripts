@@ -13,12 +13,12 @@ BeforeDiscovery {
 
 BeforeAll {
     Import-Module (Join-Path $PSScriptRoot 'TestHelpers.psm1') -Force
-    Import-Module (Join-Path $PSScriptRoot '../RemoveTempFiles/RemoveTempFiles.psd1') -Force
+    Import-Module (Join-Path $PSScriptRoot '../Remove-TempFiles/Remove-TempFiles.psd1') -Force
     $onWindows = Test-OnWindows
 }
 
 AfterAll {
-    Remove-Module RemoveTempFiles, TestHelpers -ErrorAction SilentlyContinue
+    Remove-Module Remove-TempFiles, TestHelpers -ErrorAction SilentlyContinue
 }
 
 Describe 'Remove-TempFiles' {
@@ -38,7 +38,7 @@ Describe 'Remove-TempFiles' {
 
         @(Get-ChildItem -LiteralPath $tempRoot -Force) | Should -HaveCount 0
         Test-Path -LiteralPath $tempRoot | Should -BeTrue -Because 'only the contents are deleted, not the temp folder itself'
-        "$out" | Should -Match 'Deleted 2 item\(s\)\. 0 item\(s\) could not be fully deleted\.'
+        "$out" | Should -Match 'Deleted 2 items\. 0 items could not be fully deleted\.'
     }
 
     It 'deletes hidden and read-only files' {
@@ -77,7 +77,7 @@ Describe 'Remove-TempFiles' {
 
         @(Get-ChildItem -LiteralPath $tempRoot -Force) | Should -HaveCount 0
         @(Get-ChildItem -LiteralPath $second -Force) | Should -HaveCount 0
-        "$out" | Should -Match 'Deleted 2 item\(s\)'
+        "$out" | Should -Match 'Deleted 2 items\.'
     }
 
     It 'skips names matching -Exclude (wildcards allowed)' {
@@ -123,7 +123,7 @@ Describe 'Remove-TempFiles' {
     It 'handles an empty folder without errors' {
         $out = Remove-TempFiles -Path $tempRoot -ErrorVariable errors 6>&1
         $errors | Should -HaveCount 0
-        "$out" | Should -Match 'Deleted 0 item\(s\)\. 0 item\(s\)'
+        "$out" | Should -Match 'Deleted 0 items\. 0 items'
     }
 
     It 'deletes a folder link but not the folder it points to' {
@@ -140,7 +140,7 @@ Describe 'Remove-TempFiles' {
     Context 'default folders' {
         # Test-Path is mocked to say no folder exists, so nothing can be deleted; -WhatIf on top of that.
         BeforeEach {
-            Mock -ModuleName RemoveTempFiles Test-Path { $false }
+            Mock -ModuleName Remove-TempFiles Test-Path { $false }
         }
 
         It 'uses the user and Windows temp folders on Windows' -Skip:(-not $onWindows) {
@@ -188,7 +188,7 @@ Describe 'Remove-TempFiles' {
             Test-Path -LiteralPath (Join-Path $tempRoot 'free.tmp') | Should -BeFalse
             Test-Path -LiteralPath (Join-Path $tempRoot 'folder/free.tmp') | Should -BeFalse -Because 'rd keeps going past locked files'
             Test-Path -LiteralPath $lockedInFolder | Should -BeTrue
-            "$out" | Should -Match 'Deleted 1 item\(s\)\. 2 item\(s\) could not be fully deleted\.'
+            "$out" | Should -Match 'Deleted 1 item\. 2 items could not be fully deleted\.'
         }
 
         It 'stops reporting errors with -ErrorAction SilentlyContinue' {

@@ -11,7 +11,7 @@ BeforeDiscovery {
 
 BeforeAll {
     Import-Module (Join-Path $PSScriptRoot 'TestHelpers.psm1') -Force
-    Import-Module (Join-Path $PSScriptRoot '../DeleteBinObjFolders/DeleteBinObjFolders.psd1') -Force
+    Import-Module (Join-Path $PSScriptRoot '../Remove-BinObjFolders/Remove-BinObjFolders.psd1') -Force
     $onWindows = Test-OnWindows
 
     # Relative folder paths (directories only) under $Root, '/'-separated, sorted.
@@ -29,7 +29,7 @@ BeforeAll {
 }
 
 AfterAll {
-    Remove-Module DeleteBinObjFolders, TestHelpers -ErrorAction SilentlyContinue
+    Remove-Module Remove-BinObjFolders, TestHelpers -ErrorAction SilentlyContinue
 }
 
 Describe 'Remove-BinObjFolders' {
@@ -54,7 +54,7 @@ Describe 'Remove-BinObjFolders' {
         Get-Folders $root | Should -Be @('App', 'src', 'src/Lib')
         Test-Path -LiteralPath (Join-Path $root 'App/App.csproj') | Should -BeTrue
         Test-Path -LiteralPath (Join-Path $root 'src/Lib/Lib.csproj') | Should -BeTrue
-        "$out" | Should -Match 'Deleted 5 folder\(s\)\. 0 folder\(s\) could not be fully deleted\.'
+        "$out" | Should -Match 'Deleted 5 folders\. 0 folders could not be fully deleted\.'
     }
 
     It 'only deletes bin/obj folders next to a project or solution file' {
@@ -100,7 +100,7 @@ Describe 'Remove-BinObjFolders' {
         $out = Remove-BinObjFolders -Path $root -Force 6>&1
 
         Get-Folders $root | Should -Be @('App')
-        "$out" | Should -Match 'Deleted 2 folder\(s\)'
+        "$out" | Should -Match 'Deleted 2 folders\.'
     }
 
     It 'never searches .git or node_modules' {
@@ -263,7 +263,7 @@ Describe 'Remove-BinObjFolders' {
             "$errors" | Should -Match ([regex]::Escape((Join-Path $root 'A\bin')))
             Test-Path -LiteralPath (Join-Path $root 'A/bin/free.dll') | Should -BeFalse -Because 'rd keeps going past locked files'
             Test-Path -LiteralPath (Join-Path $root 'B/obj') | Should -BeFalse
-            "$out" | Should -Match 'Deleted 1 folder\(s\)\. 1 folder\(s\) could not be fully deleted\.'
+            "$out" | Should -Match 'Deleted 1 folder\. 1 folder could not be fully deleted\.'
         }
 
         It 'deletes read-only and hidden files' {
